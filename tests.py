@@ -63,8 +63,9 @@ def test_setVariable():
   assert setVariable(VariableValue.BOTH, VariableValue.TRUE) == VariableValue.BOTH, "Expected BOTH + TRUE to be BOTH"
 
 if __name__ == "__main__":
+  options.testLogMode = True
   result = testAll()
   if result == 0:
-    logTestSuccess("All tests passed successfully!")
+    logTest("All tests passed successfully!")
   else:
-    logTestError(f"{result} tests failed.")
+    logTest(f"{result} tests failed.")

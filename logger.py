@@ -1,33 +1,35 @@
 import logging
+from options import *
 
 first = True
 
 def logTestError(input):
-   print("ERROR: " + input)
-   log(input)
+  baseLog("ERROR: " + input)
+  print("ERROR: " + input)
 
 def logTestSuccess(input):
+  baseLog("SUCCESS: " + input)
   print("SUCCESS: " + input)
-  log(input)
 
-def log(input):
+def logTest(input):
+  baseLog(input)
+  print(input)
+
+def baseLog(input):
   global first
   if first:
-      logging.basicConfig(level=logging.INFO, format='%(message)s', filename='resolution.log', filemode='w')
+      logging.basicConfig(level=logging.INFO, format='%(message)s', filename=options.logFile, filemode='w')
       first = False
   logging.info(input)
-  print(input)
+  if not options.testLogMode:
+    print(input)
   return
 
-def flush():
-  logging.basicConfig(level=logging.INFO, format='%(message)s')
-  logging.getLogger().handlers[0].flush()
+def log(level: VerboseLevel = VerboseLevel.JustSolution, input = ""):
+  if options.verbouseLevel.value <= level.value:
+    baseLog(input)
+  return
 
 def logTex(input):
-  # global first
-  # if first:
-  #     logging.basicConfig(level=logging.INFO, format='%(message)s', filename='tex.log', filemode='w')
-  #     first = False
-  # logging.info(" & " + input + "  \\\\")
-  # print(input)
+  log(input)
   return
