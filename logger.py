@@ -2,6 +2,14 @@ import logging
 
 first = True
 
+def logTestError(input):
+   print("ERROR: " + input)
+   log(input)
+
+def logTestSuccess(input):
+  print("SUCCESS: " + input)
+  log(input)
+
 def log(input):
   global first
   if first:
