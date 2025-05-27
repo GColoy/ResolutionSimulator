@@ -17,7 +17,10 @@ class Options:
   logFile: str = "resolution.log"
   testLogMode: bool = False
   stopAtEmptySet: bool = True
+  stopWhenFoundKlausel = None # Needs klausel as type; NOT WORKING YET
+  stopAfterStep: int = -1  # -1 means no limit
   removeTrivialAtEnd: bool = False
   removeTrivialEachItteration: bool = False
+  optimiseTree: bool = True
 
 options = Options()

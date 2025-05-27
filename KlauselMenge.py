@@ -47,16 +47,26 @@ class KlauselMenge:
     n = self.klauselAmount()
     nprev = -1
     foundEmptySet = False
-    while n > nprev:
+    foundTargetKlausel = False
+    while n > nprev and not foundEmptySet and options.stopAfterStep != steps and not foundTargetKlausel:
       steps += 1
       allFoundKlauseln = self.solveStep()
       newKlauseln = []
       for newKlausel in allFoundKlauseln:
-        if newKlausel not in self.klauseln:
-          newKlauseln.append(newKlausel)
-          self.addKlausel(newKlausel)
-          if newKlausel.isEmpty() and options.stopAtEmptySet:
-            foundEmptySet = True
+        if newKlausel in self.klauseln:
+          if not options.optimiseTree:
+            continue
+          existingKlausel = self.klauseln[self.klauseln.index(newKlausel)]
+          if existingKlausel.addedDepth <= newKlausel.addedDepth:
+            continue
+          else:
+            self.klauseln.remove(existingKlausel)
+        newKlauseln.append(newKlausel)
+        self.addKlausel(newKlausel)
+        if options.stopAtEmptySet and newKlausel.isEmpty():
+          foundEmptySet = True
+        if options.stopWhenFoundKlausel and newKlausel == options.stopWhenFoundKlausel:
+          foundTargetKlausel = True
       newResults = KlauselMenge(newKlauseln)
       nprev = n
       n = self.klauselAmount()
@@ -69,6 +79,8 @@ class KlauselMenge:
       log(VerboseLevel.AfterEachRecursion, f"Total clauses: {self.klauseln}")
     if foundEmptySet:
       log(VerboseLevel.AfterEachRecursion, "Found empty set , stopping resolution.")
+    elif foundTargetKlausel:
+      log(VerboseLevel.AfterEachRecursion, f"Found target clause {options.stopWhenFoundKlausel}, stopping resolution.")
     else:
       log(VerboseLevel.AfterEachRecursion, "Resolution complete.")
     return self.klauseln
@@ -95,28 +107,30 @@ class KlauselMenge:
     self.klauseln = [klausel for klausel in self.klauseln if not klausel.isTrivial()]
     log(VerboseLevel.AfterEachRecursionVerbose, f"Remaining clauses after removal: {self.klauselAmount()}")
 
+  def traceKlausel(self, klausel: Klausel):
+    if not isinstance(klausel, Klausel):
+      raise TypeError("klausel must be an instance of Klausel")
+    if klausel in self.klauseln:
+      logTree(self.klauseln[self.klauseln.index(klausel)])
+    else:
+      return None
+
 def parse_klauselmenge(input_str):
   # Entferne äußere Klammern und Leerzeichen
   input_str = input_str.strip()[1:-1].strip()
   
   # Finde alle Klauseln als Strings mit geschweiften Klammern
-  klausel_strings = re.findall(r'\{[^{}]*\}', input_str)
+  klausel_strings: str = re.findall(r'\{[^{}]*\}', input_str)
   
   klauseln = []
-  for k_str in klausel_strings:
-      k_str = k_str.strip('{} ')
-      literals = k_str.split(',')
-      literal_map = {}
-      for literal in literals:
-          lit = literal.strip()
-          if not lit:
-              continue
-          if lit.startswith('¬') or lit.startswith('~'):
-              var = lit[1:].strip()
-              literal_map[var] = VariableValue.FALSE
-          else:
-              var = lit
-              literal_map[var] = VariableValue.TRUE
-      klauseln.append(Klausel(literal_map))
+  for k_str in klausel_strings:  
+    klauseln.append(Klausel(k_str.strip()))
   
   return klauseln
+
+def logTree(klausel: Klausel, depth: int = 0):
+    log(input="     " * depth + str(klausel))
+    if klausel.parents is None:
+        return
+    for parent in klausel.parents:
+        logTree(parent, depth + 1)
